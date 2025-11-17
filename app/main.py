@@ -140,4 +140,4 @@ class Dictionary:
         for node in other.nodes:
             if node:
                 self.__setitem__(node.node_key, node.node_value)
-            ...
+            pass
