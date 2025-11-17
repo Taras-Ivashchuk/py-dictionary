@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Hashable, Any, Union
+from typing import Hashable, Any, Union, Iterator
 
 
 @dataclass
@@ -12,6 +12,7 @@ class Node:
 
 # singleton
 DELETED = object()
+SENTINEL = object()
 
 
 class Dictionary:
@@ -122,22 +123,24 @@ class Dictionary:
         except KeyError:
             return default
 
-    def pop(self, key: Any, default: Any = None) -> Any:
-        try:
-            value = self.get(key, default)
+    def pop(self, key: Any, default: Any = SENTINEL) -> Any:
+        value = self.get(key, SENTINEL)
+        if value is SENTINEL:
+            if default is SENTINEL:
+                raise KeyError(f"{key} is not found")
+            else:
+                return default
+        else:
             self.__delitem__(key)
             return value
-        except KeyError:
-            if default is not None:
-                return default
-            else:
-                raise
 
-    def __iter__(self) -> Any:
-        return self.nodes
+    def __iter__(self) -> Iterator[Hashable]:
+        return (
+            node.node_key
+            for node in self.nodes
+            if node is not None and node is not DELETED
+        )
 
     def update(self, other: Dictionary) -> None:
-        for node in other.nodes:
-            if node:
-                self.__setitem__(node.node_key, node.node_value)
-            pass
+        for other_key in other:
+            self.__setitem__(other_key, other.get(other_key))
